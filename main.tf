@@ -2,7 +2,6 @@ locals {
   cluster_name = "eks_terraform"
 }
 
-
 module "vpc" {
   source = "terraform-aws-modules/vpc/aws"
 
@@ -73,16 +72,11 @@ resource "aws_security_group" "control_plane_sg" {
   }
 }
 resource "aws_cloudwatch_log_group" "eks_log" {
-  # The log group name format is /aws/eks/<cluster-name>/cluster
-  # Reference: https://docs.aws.amazon.com/eks/latest/userguide/control-plane-logs.html
   name              = "/aws/eks/${local.cluster_name}/cluster"
   retention_in_days = 7
-
-  # ... potentially other configuration ...
 }
 
 resource "aws_eks_cluster" "example" {
-  #count = length(module.vpc.private_subnets)
   enabled_cluster_log_types = ["api", "audit", "authenticator", "controllerManager", "scheduler"]
   name     = local.cluster_name
   role_arn = aws_iam_role.cluster.arn
@@ -93,17 +87,12 @@ resource "aws_eks_cluster" "example" {
     endpoint_public_access  = true
     public_access_cidrs     = ["0.0.0.0/0"]
   }
-
-  # Ensure that IAM Role permissions are created before and deleted after EKS Cluster handling.
-  # Otherwise, EKS will not be able to properly delete EKS managed EC2 infrastructure such as Security Groups.
   depends_on = [
     aws_iam_role_policy_attachment.cluster_AmazonEKSClusterPolicy,
     aws_iam_role_policy_attachment.AmazonEKSVPCResourceController,
     aws_cloudwatch_log_group.eks_log,
   ]
 }
-
-
 
 output "endpoint" {
   value = aws_eks_cluster.example.endpoint

@@ -63,11 +63,6 @@ resource "aws_security_group" "node_group_sg" {
   }
 }
 
-
-
-
-
-
 resource "aws_eks_node_group" "example" {
   cluster_name    = local.cluster_name
   node_group_name = "terraform_nodegroup"
@@ -83,9 +78,6 @@ resource "aws_eks_node_group" "example" {
   update_config {
     max_unavailable = 1
   }
-
-  # Ensure that IAM Role permissions are created before and deleted after EKS Node Group handling.
-  # Otherwise, EKS will not be able to properly delete EC2 Instances and Elastic Network Interfaces.
   depends_on = [
     aws_iam_role_policy_attachment.node_AmazonEKSWorkerNodePolicy,
     aws_iam_role_policy_attachment.node_AmazonEKS_CNI_Policy,
